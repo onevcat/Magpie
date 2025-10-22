@@ -30,7 +30,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
-    "hono": "^4.9.6",
+    "hono": "^4.10.2",
     "http-proxy": "^1.18.1",
     "jsdom": "^24.0.0",
     "jsonwebtoken": "^9.0.2",
