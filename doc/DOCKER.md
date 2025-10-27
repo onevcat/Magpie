@@ -42,7 +42,7 @@ pnpm docker:run
 |------|------|------------|
 | `pnpm docker:build` | 智能构建（自动版本管理） | `scripts/run-docker.sh build` |
 | `pnpm docker:build:dev` | 构建开发版本 | `IMAGE_TAG=dev scripts/run-docker.sh build` |
-| `pnpm docker:push` | 推送镜像到注册表 | `scripts/run-docker.sh push` |
+| `pnpm docker:push` | 构建并推送多架构镜像 | `scripts/run-docker.sh push` |
 | `pnpm docker:run` | 启动容器 | `scripts/run-docker.sh start` |
 | `pnpm docker:status` | 查看容器状态 | `scripts/run-docker.sh status` |
 | `pnpm docker:logs` | 查看容器日志 | `scripts/run-docker.sh logs` |
@@ -276,6 +276,8 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-std
 
 ### 推送镜像
 
+> ℹ️ `pnpm docker:push` 会自动通过 Docker Buildx 构建 `linux/amd64` 与 `linux/arm64` 多架构镜像，如本地未配置 builder 会自动创建 `magpie-builder`。
+
 **方法一：使用环境变量**
 ```bash
 # 设置环境变量
@@ -308,24 +310,33 @@ $ REGISTRY_USER=onevcat pnpm docker:push
    注册表: ghcr.io
    用户名: onevcat
    版本: 0.1.0
+   目标仓库: ghcr.io/onevcat/magpie
 
-🏷️ 准备推送的镜像标签:
-   - magpie:0.1.0 → ghcr.io/onevcat/magpie:0.1.0
-   - magpie:latest → ghcr.io/onevcat/magpie:latest
-   - magpie:stable → ghcr.io/onevcat/magpie:stable
+🏷️ 将推送的镜像标签:
+   - ghcr.io/onevcat/magpie:0.1.0
+   - ghcr.io/onevcat/magpie:latest
+   - ghcr.io/onevcat/magpie:stable
 
-🚀 开始推送镜像...
-推送标签: 0.1.0
-✅ 0.1.0 推送成功
+🛠️ 构建平台: linux/amd64,linux/arm64
 
-推送标签: latest  
-✅ latest 推送成功
+🚀 开始构建并推送多架构镜像...
+... (buildx 输出省略) ...
+✅ 多架构镜像推送完成
 
-📦 推送完成！
 💡 使用方式:
    docker pull ghcr.io/onevcat/magpie:0.1.0
    docker pull ghcr.io/onevcat/magpie:latest
 ```
+
+#### 自定义构建平台
+
+- 使用 `BUILD_PLATFORMS` 环境变量覆盖默认平台，例如：
+
+  ```bash
+  BUILD_PLATFORMS="linux/amd64,linux/arm64,linux/arm/v7" REGISTRY_USER=onevcat pnpm docker:push
+  ```
+
+- 通过设置 `BUILDX_BUILDER_NAME=my-magpie-builder` 自定义 builder 名称。
 
 ### 在其他设备拉取镜像
 

@@ -43,6 +43,24 @@ get_git_info() {
     fi
 }
 
+ensure_buildx_builder() {
+    if ! docker buildx version > /dev/null 2>&1; then
+        echo -e "${RED}❌ 错误: 当前 Docker 不支持 buildx，请升级 Docker 版本${NC}"
+        exit 1
+    fi
+
+    local builder_name="${BUILDX_BUILDER_NAME:-magpie-builder}"
+
+    if ! docker buildx inspect "$builder_name" > /dev/null 2>&1; then
+        echo -e "${BLUE}🆕 创建 buildx builder: $builder_name${NC}"
+        docker buildx create --name "$builder_name" --use > /dev/null
+    else
+        docker buildx use "$builder_name" > /dev/null
+    fi
+
+    docker buildx inspect --bootstrap > /dev/null
+}
+
 # 显示帮助信息
 show_help() {
     cat << EOF
@@ -79,6 +97,8 @@ Magpie Docker 运行脚本
     JWT_SECRET                JWT密钥
     REGISTRY                  镜像注册表地址
     REGISTRY_USER             注册表用户名
+    BUILD_PLATFORMS           构建/推送目标平台 (默认: linux/amd64,linux/arm64)
+    BUILDX_BUILDER_NAME       buildx builder 名称 (默认: magpie-builder)
     OPENAI_API_KEY            OpenAI API密钥
     OPENAI_BASE_URL           OpenAI API基础URL
     BASE_URL                  应用基础URL
@@ -341,68 +361,90 @@ push_image() {
         echo "请设置 REGISTRY_USER 环境变量或使用 --user 参数"
         exit 1
     fi
-    
+
+    cd "$(dirname "$0")/.." || exit 1
+
     local version=$(get_version_from_package)
+    local git_info=$(get_git_info)
+    local registry_repo="$REGISTRY/$REGISTRY_USER/magpie"
     local tags_to_push=()
-    
+
     echo -e "${BLUE}📋 推送信息:${NC}"
     echo "   注册表: $REGISTRY"
     echo "   用户名: $REGISTRY_USER"
     echo "   版本: $version"
+    echo "   目标仓库: $registry_repo"
     echo ""
-    
-    # 收集需推送的标签：当前版本、latest、stable
-    if docker image inspect "magpie:$version" >/dev/null 2>&1; then
-        tags_to_push+=("$version")
-    else
-        echo -e "${RED}❌ 错误: 未找到本地镜像 magpie:$version${NC}"
-    fi
 
-    if docker image inspect "magpie:latest" >/dev/null 2>&1; then
-        tags_to_push+=("latest")
+    if [ "$IMAGE_TAG" = "latest" ] && [ "$version" != "latest" ]; then
+        tags_to_push+=("$version" "latest")
+        if echo "$git_info" | grep -q "^master\\|^main"; then
+            tags_to_push+=("stable")
+        else
+            tags_to_push+=("dev-$git_info")
+        fi
     else
-        echo -e "${YELLOW}⚠️  提示: 未找到 magpie:latest，本次不会推送该标签${NC}"
-    fi
-
-    if docker image inspect "magpie:stable" >/dev/null 2>&1; then
-        tags_to_push+=("stable")
-    else
-        echo -e "${YELLOW}⚠️  提示: 未找到 magpie:stable，本次不会推送该标签${NC}"
+        tags_to_push+=("$IMAGE_TAG")
     fi
 
     if [ ${#tags_to_push[@]} -eq 0 ]; then
         echo -e "${RED}❌ 错误: 没有可推送的镜像标签${NC}"
-        echo "请先运行构建命令: ./run-docker.sh build"
+        cd - > /dev/null || exit 1
         exit 1
     fi
-    
-    echo -e "${BLUE}🏷️  准备推送的镜像标签:${NC}"
+
+    local unique_tags=()
     for tag in "${tags_to_push[@]}"; do
-        echo "   - magpie:$tag → $REGISTRY/$REGISTRY_USER/magpie:$tag"
+        local exists=false
+        for existing in "${unique_tags[@]}"; do
+            if [ "$existing" = "$tag" ]; then
+                exists=true
+                break
+            fi
+        done
+        if [ "$exists" = false ]; then
+            unique_tags+=("$tag")
+        fi
+    done
+    tags_to_push=("${unique_tags[@]}")
+
+    echo -e "${BLUE}🏷️  将推送的镜像标签:${NC}"
+    for tag in "${tags_to_push[@]}"; do
+        echo "   - $registry_repo:$tag"
     done
     echo ""
-    
-    # 推送每个镜像标签
-    echo -e "${BLUE}🚀 开始推送镜像...${NC}"
+
+    ensure_buildx_builder
+
+    local build_platforms="${BUILD_PLATFORMS:-linux/amd64,linux/arm64}"
+    echo -e "${BLUE}🛠️  构建平台: $build_platforms${NC}"
+
+    local build_args=()
     for tag in "${tags_to_push[@]}"; do
-        echo -e "${YELLOW}推送标签: $tag${NC}"
-        
-        # 标记镜像
-        docker tag "magpie:$tag" "$REGISTRY/$REGISTRY_USER/magpie:$tag"
-        
-        # 推送镜像
-        if docker push "$REGISTRY/$REGISTRY_USER/magpie:$tag"; then
-            echo -e "${GREEN}✅ $tag 推送成功${NC}"
-        else
-            echo -e "${RED}❌ $tag 推送失败${NC}"
-        fi
-        echo ""
+        build_args+=(--tag "$registry_repo:$tag")
     done
-    
-    echo -e "${GREEN}📦 推送完成！${NC}"
-    echo -e "${BLUE}💡 使用方式:${NC}"
-    echo "   docker pull $REGISTRY/$REGISTRY_USER/magpie:$version"
-    echo "   docker pull $REGISTRY/$REGISTRY_USER/magpie:latest"
+
+    if [ ${#build_args[@]} -eq 0 ]; then
+        echo -e "${RED}❌ 错误: 构建参数生成失败${NC}"
+        cd - > /dev/null || exit 1
+        exit 1
+    fi
+
+    echo ""
+    echo -e "${BLUE}🚀 开始构建并推送多架构镜像...${NC}"
+    if docker buildx build --platform "$build_platforms" "${build_args[@]}" --push .; then
+        echo -e "${GREEN}✅ 多架构镜像推送完成${NC}"
+        echo -e "${BLUE}💡 使用方式:${NC}"
+        for tag in "${tags_to_push[@]}"; do
+            echo "   docker pull $registry_repo:$tag"
+        done
+    else
+        echo -e "${RED}❌ 多架构镜像推送失败${NC}"
+        cd - > /dev/null || exit 1
+        exit 1
+    fi
+
+    cd - > /dev/null || exit 1
 }
 
 # 主函数
