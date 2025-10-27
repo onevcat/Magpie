@@ -12,8 +12,6 @@ export interface LinkDataBuilderParams {
   category?: string | null
   tags?: string[] | null
   now: number
-  // Optional override for user field handling (used for stream mode)
-  forceUserFields?: boolean
 }
 
 export function buildLinkData({
@@ -26,26 +24,17 @@ export function buildLinkData({
   skipConfirm,
   category,
   tags,
-  now,
-  forceUserFields = false
+  now
 }: LinkDataBuilderParams) {
   // Determine title with priority: AI title > scraped title > empty string
   const title = aiAnalysis.title || scrapedContent.title || ''
-  
-  // Handle user fields based on skipConfirm flag or forceUserFields override
-  const userDescription = forceUserFields 
-    ? null  // Stream mode always uses null
-    : (skipConfirm ? aiAnalysis.summary : null)
-    
-  const userCategory = forceUserFields
-    ? (category || null)  // Stream mode: simple fallback
-    : (skipConfirm ? (category || aiAnalysis.category) : null) // Use AI analysis for published, null for pending
-    
-  const userTags = forceUserFields
-    ? (tags ? JSON.stringify(tags) : null)  // Stream mode: simple conversion
-    : (skipConfirm 
-        ? JSON.stringify(aiAnalysis.tags) // Always use AI tags for published
-        : null) // null for pending links
+
+  // Handle user fields based on skipConfirm flag
+  // When skipConfirm=true (publishing): use user inputs or fall back to AI analysis
+  // When skipConfirm=false (pending): set user fields to null (will be set during confirmation)
+  const userDescription = skipConfirm ? aiAnalysis.summary : null
+  const userCategory = skipConfirm ? (category || aiAnalysis.category) : null
+  const userTags = skipConfirm ? JSON.stringify(tags || aiAnalysis.tags) : null
 
   return {
     url,

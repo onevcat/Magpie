@@ -301,8 +301,7 @@ function createAddLinkStreamRouter(database = db) {
           skipConfirm,
           category,
           tags: userTags,
-          now,
-          forceUserFields: true // Use stream-specific user field handling
+          now
         })
 
         // Insert into database
