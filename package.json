@@ -1,6 +1,6 @@
 {
   "name": "magpie",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A lightweight blog system for collecting and displaying interesting links",
   "private": true,
   "workspaces": [

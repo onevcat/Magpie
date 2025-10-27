@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Magpie 扩展",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "description": "将有趣的链接保存到你的 Magpie 收藏",
   "icons": {
     "16": "icons/icon16.png",
