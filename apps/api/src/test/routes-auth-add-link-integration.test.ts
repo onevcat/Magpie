@@ -442,5 +442,81 @@ describe('Add Link Integration Tests', () => {
 
       expect(savedLink[0].status).toBe('pending')
     })
+
+    it('should set user fields correctly when skipConfirm=true (immediate publish)', async () => {
+      const mockScrapedContent: ScrapedContent = {
+        url: 'https://example.com/published-article',
+        contentType: 'article',
+        title: 'Published Article',
+        description: 'This article will be published immediately',
+        content: 'Content that will be published without review.',
+        domain: 'example.com',
+        wordCount: 100,
+        language: 'en'
+      }
+
+      const mockAIAnalysis: AIAnalysisResult = {
+        summary: 'AI-generated summary for immediate publication',
+        category: 'tech',
+        tags: ['immediate', 'publish', 'test'],
+        language: 'en',
+        sentiment: 'positive',
+        readingTime: 4
+      }
+
+      const mockAnalyzer = {
+        analyze: vi.fn().mockResolvedValue(mockAIAnalysis)
+      }
+
+      mockReadabilityScraper.scrape.mockResolvedValue(mockScrapedContent)
+      mockWebScraper.scrape.mockResolvedValue(mockScrapedContent)
+      mockCreateAIAnalyzer.mockResolvedValue(mockAnalyzer)
+
+      const response = await streamApp.request('/stream', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${testToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify({
+          url: 'https://example.com/published-article',
+          skipConfirm: true
+        })
+      })
+
+      const rawStream = await response.text()
+      const eventLines = rawStream
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.startsWith('data: '))
+
+      expect(eventLines.length).toBeGreaterThan(0)
+
+      const lastEvent = eventLines[eventLines.length - 1]
+      const payload = JSON.parse(lastEvent.slice(6))
+
+      expect(payload.stage).toBe('completed')
+      expect(payload.data?.status).toBe('published')
+      expect(payload.data?.confirmUrl).toBeUndefined() // No confirmation URL for published links
+
+      // Verify the saved link in database has user fields set correctly
+      const savedLink = await testDrizzle
+        .select()
+        .from(links)
+        .where(eq(links.id, payload.data?.id))
+        .limit(1)
+
+      expect(savedLink[0].status).toBe('published')
+      expect(savedLink[0].userDescription).toBe('AI-generated summary for immediate publication')
+      expect(savedLink[0].userCategory).toBe('tech')
+      expect(JSON.parse(savedLink[0].userTags || '[]')).toEqual(['immediate', 'publish', 'test'])
+
+      // Verify AI fields are also set
+      expect(savedLink[0].aiSummary).toBe('AI-generated summary for immediate publication')
+      expect(savedLink[0].aiCategory).toBe('tech')
+      expect(JSON.parse(savedLink[0].aiTags || '[]')).toEqual(['immediate', 'publish', 'test'])
+      expect(savedLink[0].publishedAt).toBeDefined()
+    })
   })
 })
