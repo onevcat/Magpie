@@ -192,28 +192,33 @@ pnpm db:studio
 
 ## 🛠️ 浏览器扩展
 
-### 安装扩展
+Magpie 官方 Chrome 扩展已经上架 Chrome Web Store，可直接安装使用，无需手动构建与加载。  
+[前往 Chrome Web Store 下载插件](https://chromewebstore.google.com/detail/magpie-%E6%89%A9%E5%B1%95/lpmbkjkipgafgaggkfiappkccccjjing)
 
-1. 构建扩展（用于开发）：
-   ```bash
-   cd extension
-   pnpm build
-   ```
+### 安装与配置
 
-2. 在 Chrome 中加载扩展：
-   - 打开 `chrome://extensions/`
-   - 开启"开发者模式"
-   - 点击"加载已解压的扩展程序"
-   - 选择 `extension/dist` 目录
+1. 在 Chrome Web Store 页面点击「添加至 Chrome」，完成安装。
+2. 首次点击工具栏图标时，按照向导输入你的 Magpie 实例地址（如 `https://links.example.com`）与 API Token。
+3. 可在弹窗内即时选择分类、标签，或开启「自动发布」与「跳过确认」等偏好设置。
+4. 若需批量调整默认行为，可打开扩展选项页配置默认分类、标签与自动发布策略。
 
-**注意**：扩展也提供预构建版本。请查看发布页面获取最新版本。
+> 建议为浏览器扩展单独创建 Token，遗失后只需在 Admin → API 令牌 中撤销该 Token 即可立刻失效。
 
-### 配置扩展
+如需本地调试扩展代码，可参考 `extension/README.md` 按经典「开发者模式 → 加载已解压扩展」的方式搭建开发环境。
 
-1. 点击扩展图标
-2. 输入 Magpie 实例的 URL（如 `http://localhost:3001`）
-3. 输入 API Token
-4. 点击"测试连接"确认配置正确
+## 📱 iOS / macOS 快捷指令
+
+Magpie 提供官方的「收藏到 Magpie」快捷指令，适用于 iOS 与 macOS。导入后即可在 Safari 分享菜单、主屏小组件或快捷键中一键发送当前页面。  
+[下载「收藏到 Magpie」快捷指令](https://www.icloud.com/shortcuts/1e0189f0c5cb4f59b0480abc10c5dc4a)
+
+### 使用指南
+
+1. 在 Admin → API 令牌 中为快捷指令创建一个专用 Token，便于管理。
+2. 导入快捷指令，首次运行时填入你的 Magpie 实例 URL 与刚生成的 API Token；信息会保存在系统快捷指令中，可随时编辑。
+3. 复制想要收藏的链接到剪贴板或在 Safari 分享菜单中直接调用该指令，快捷指令会调用 `/api/links` 接口完成上传。
+4. 可将快捷指令固定到 Dock、菜单栏、主屏小组件或设置为「背部轻点」等入口，让分享流程更顺手。
+
+> 如果你的实例开启了自动发布策略，快捷指令在发送时也会遵循对应设置。
 
 ## 📊 数据持久化
 
