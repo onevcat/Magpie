@@ -37,7 +37,7 @@ app.get('/', zValidator('query', searchQuerySchema), async (c) => {
     const ftsQuery = buildFTS5Query(q, tags)
     
     // 构建额外的筛选条件
-    let joinConditions: any[] = []
+    const joinConditions: any[] = []
     
     if (category) {
       joinConditions.push(eq(links.userCategory, category))
@@ -145,7 +145,7 @@ app.get('/', zValidator('query', searchQuerySchema), async (c) => {
       .offset(offset)
     
     // 格式化响应数据，添加搜索相关性和高亮
-    let results: SearchResult[] = searchResult.map((link) => {
+    const results: SearchResult[] = searchResult.map((link) => {
       const result: SearchResult = {
         id: link.id,
         url: link.url,
@@ -195,10 +195,9 @@ app.get('/', zValidator('query', searchQuerySchema), async (c) => {
     const totalTime = Date.now() - startTime
 
     // 如果搜索结果较少，生成搜索建议
-    let suggestions: string[] | undefined
-    if (total < 5 && page === 1) {
-      suggestions = await generateSearchSuggestions(q, category, domain)
-    }
+    const suggestions = total < 5 && page === 1
+      ? await generateSearchSuggestions(q, category, domain)
+      : undefined
     
     const responseData: SearchResponse = {
       results,
@@ -400,7 +399,7 @@ app.get('/suggestions', zValidator('query', suggestionsQuerySchema), async (c) =
 // 工具函数：构建 FTS5 查询
 function buildFTS5Query(query: string, tags?: string): string {
   // 转义 FTS5 特殊字符
-  let escapedQuery = query.replace(/['"]/g, '""')
+  const escapedQuery = query.replace(/['"]/g, '""')
   
   // 构建基础查询
   let ftsQuery = `"${escapedQuery}"`
@@ -477,7 +476,7 @@ async function generateSearchSuggestions(
   
   try {
     // 使用 FTS5 查找相似的标题
-    let baseConditions = [eq(links.status, 'published')]
+    const baseConditions = [eq(links.status, 'published')]
     if (category) baseConditions.push(eq(links.userCategory, category))
     if (domain) baseConditions.push(eq(links.domain, domain))
     

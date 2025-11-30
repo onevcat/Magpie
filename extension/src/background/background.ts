@@ -6,12 +6,11 @@
 import { 
   MessageType, 
   ExtensionMessage, 
-  SaveLinkMessage,
-  SaveStatus 
+  SaveLinkMessage
 } from '../shared/types';
 import { MagpieApiClient } from '../shared/api';
 import { isConfigured, getConfig } from '../shared/storage';
-import { getCurrentTab, getPageTitle, isValidUrl, log, showNotification } from '../shared/utils';
+import { getPageTitle, isValidUrl, log, showNotification } from '../shared/utils';
 
 // Context menu item IDs
 const CONTEXT_MENU_IDS = {

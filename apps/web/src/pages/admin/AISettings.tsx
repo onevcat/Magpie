@@ -502,7 +502,7 @@ export default function AISettings() {
         </svg>
         <div>
           <h3 className="font-bold">别忘记保存！</h3>
-          <div className="text-xs">点击上方的"保存配置"按钮后更改将生效。</div>
+          <div className="text-xs">点击上方的 &quot;保存配置&quot; 按钮后更改将生效。</div>
         </div>
       </div>
     </div>

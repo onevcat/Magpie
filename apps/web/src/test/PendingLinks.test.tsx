@@ -334,11 +334,18 @@ describe('PendingLinks', () => {
   describe('Date Formatting', () => {
     it('should format timestamps correctly', async () => {
       renderWithQueryClient(<PendingLinks />)
+      const expectedDate = new Date(1640995200 * 1000).toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
       
       await waitFor(() => {
         // Should show formatted date (1640995200 = 2022-01-01 00:00:00 UTC)
-        // The formatDate function uses toLocaleString('zh-CN') which outputs "2022/01/01 09:00" format
-        expect(screen.getByText('2022/01/01 09:00')).toBeInTheDocument()
+        // The formatDate function uses toLocaleString('zh-CN'), matching the locally formatted timestamp
+        expect(screen.getByText(expectedDate)).toBeInTheDocument()
       })
     })
   })

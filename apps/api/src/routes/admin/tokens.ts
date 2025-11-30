@@ -42,7 +42,7 @@ function createAdminTokensRouter(database = db) {
       const offset = (page - 1) * limit
 
       // Build where conditions
-      let whereConditions: any[] = []
+      const whereConditions: any[] = []
       if (status) {
         whereConditions.push(eq(apiTokens.status, status))
       }

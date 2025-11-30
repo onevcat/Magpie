@@ -69,7 +69,7 @@ export async function getBotPageData(database: DatabaseType, filters?: QueryFilt
     // 构建查询条件
     let whereConditions: SQL<unknown> = eq(links.status, 'published')
     let linkLimit = 50
-    let orderBy = desc(links.publishedAt)
+    const orderBy = desc(links.publishedAt)
     
     if (filters?.linkId) {
       // 如果指定了链接ID，只获取该链接

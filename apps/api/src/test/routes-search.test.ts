@@ -30,7 +30,7 @@ const createSearchApp = () => {
       const offset = (page - 1) * limit
       
       // 构建查询条件
-      let whereConditions: any[] = [eq(links.status, 'published')]
+      const whereConditions: any[] = [eq(links.status, 'published')]
       
       // 搜索条件
       whereConditions.push(

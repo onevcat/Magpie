@@ -529,7 +529,7 @@ export default function SystemSettings() {
     
     // Always reset dragging state after processing
     setIsDragging(false)
-  }, [categories, reorderCategoriesMutation, queryClient])
+  }, [categories, reorderCategoriesMutation, queryClient, showToast])
 
   if (isLoading) {
     return (
@@ -780,7 +780,7 @@ export default function SystemSettings() {
         </svg>
         <div>
           <h3 className="font-bold">别忘记保存！</h3>
-          <div className="text-xs">点击上方的"保存所有更改"按钮后更改将生效。</div>
+          <div className="text-xs">点击上方的 &quot;保存所有更改&quot; 按钮后更改将生效。</div>
         </div>
       </div>
 

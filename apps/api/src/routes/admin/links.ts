@@ -37,7 +37,7 @@ export function createAdminLinksRouter(database = db) {
       const offset = (page - 1) * limit
       
       // Build query conditions
-      let whereConditions: any[] = []
+      const whereConditions: any[] = []
       
       // Status filter
       if (status !== 'all') {
