@@ -369,10 +369,10 @@ export default function AddLink() {
   
   // Cleanup on unmount
   useEffect(() => {
+    const eventSource = eventSourceRef.current
+
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-      }
+      eventSource?.close()
     }
   }, [])
 

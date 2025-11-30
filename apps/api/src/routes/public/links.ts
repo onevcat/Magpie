@@ -32,7 +32,19 @@ app.onError((err, c) => {
 app.get('/', zValidator('query', linksQuerySchema), async (c) => {
   try {
     const queryParams = c.req.valid('query')
-    let { page, limit, category, tags, search, domain, year, month, sort, id } = queryParams
+    const {
+      page,
+      limit: initialLimit,
+      category,
+      tags,
+      search,
+      domain,
+      year,
+      month,
+      sort,
+      id,
+    } = queryParams
+    let limit = initialLimit
     
     // 如果没有提供limit参数，从系统设置中获取默认值
     if (!c.req.query('limit')) {
@@ -52,7 +64,7 @@ app.get('/', zValidator('query', linksQuerySchema), async (c) => {
     const offset = (page - 1) * limit
     
     // 构建查询条件
-    let whereConditions: any[] = [eq(links.status, 'published')]
+    const whereConditions: any[] = [eq(links.status, 'published')]
     
     if (id) {
       whereConditions.push(eq(links.id, id))

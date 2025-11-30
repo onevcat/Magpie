@@ -35,7 +35,7 @@ function createAdminPendingRouter(database = db) {
       const offset = (page - 1) * limit
       
       // Build query conditions
-      let whereConditions: any[] = [eq(links.status, 'pending')]
+      const whereConditions: any[] = [eq(links.status, 'pending')]
       
       if (domain) {
         whereConditions.push(eq(links.domain, domain))

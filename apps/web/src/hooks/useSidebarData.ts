@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '../utils/api'
 import { isSuccessResponse } from '../utils/api-helpers'
@@ -26,9 +26,12 @@ export function useSidebarData(
     staleTime: 5 * 60 * 1000,
   })
   
-  const categoriesData = categoriesResponse && isSuccessResponse(categoriesResponse) 
-    ? categoriesResponse.data 
-    : []
+  const categoriesData = useMemo(() => {
+    if (categoriesResponse && isSuccessResponse(categoriesResponse)) {
+      return categoriesResponse.data
+    }
+    return []
+  }, [categoriesResponse])
 
   // 简化的sidebar数据更新逻辑
   useEffect(() => {

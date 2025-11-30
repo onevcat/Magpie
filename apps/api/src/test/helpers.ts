@@ -3,8 +3,8 @@ import { users } from '../db/schema.js';
 import { seedDatabase } from '../db/seed.js';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import publicLinks from '../routes/public/links.js';
-import searchRoutes from '../routes/public/search.js';
+import { createLinksRouter } from '../routes/public/links.js';
+import { createSearchRouter } from '../routes/public/search.js';
 import authAddLinkRoutes from '../routes/auth/add-link.js';
 
 /**
@@ -100,11 +100,13 @@ export async function testApp() {
   // Add CORS middleware
   app.use('/*', cors())
   
-  // Mount public links routes for testing
-  app.route('/api/links', publicLinks)
+  // Mount public links routes for testing (using test database)
+  const linksRouter = createLinksRouter(testDrizzle)
+  app.route('/api/links', linksRouter)
   
-  // Mount search routes
-  app.route('/api/search', searchRoutes)
+  // Mount search routes with test database
+  const searchRouter = createSearchRouter(testDrizzle)
+  app.route('/api/search', searchRouter)
   
   // Mount auth routes
   app.route('/api/auth/add-link', authAddLinkRoutes)

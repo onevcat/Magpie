@@ -181,7 +181,9 @@ export default function AdminActivity() {
   })
 
   const activityData = data && isSuccessResponse(data) ? data.data : null
-  const logs: AdminActivityResponse['logs'] = activityData?.logs ?? []
+  const logs = useMemo<AdminActivityResponse['logs']>(() => {
+    return activityData?.logs ?? []
+  }, [activityData])
   const pagination = activityData?.pagination
   const availableFilters: AdminActivityResponse['availableFilters'] = activityData?.availableFilters ?? {
     actions: [],
