@@ -25,8 +25,6 @@ import type {
   
   // Data types
   Link,
-  PendingLink,
-  AdminLink,
   ApiToken,
   StreamStatusMessage,
 } from './api'
