@@ -518,5 +518,74 @@ describe('Add Link Integration Tests', () => {
       expect(JSON.parse(savedLink[0].aiTags || '[]')).toEqual(['immediate', 'publish', 'test'])
       expect(savedLink[0].publishedAt).toBeDefined()
     })
+
+    it('should fall back to the configured default category when AI analysis is unavailable', async () => {
+      const now = Math.floor(Date.now() / 1000)
+
+      await testDrizzle
+        .update(settings)
+        .set({ value: '杂项', updatedAt: now })
+        .where(eq(settings.key, 'default_category'))
+
+      await testDrizzle
+        .update(settings)
+        .set({ value: JSON.stringify(['杂项', '技术']), type: 'json', updatedAt: now })
+        .where(eq(settings.key, 'categories'))
+
+      await testDrizzle
+        .update(settings)
+        .set({ value: '', updatedAt: now })
+        .where(eq(settings.key, 'openai_api_key'))
+
+      const mockScrapedContent: ScrapedContent = {
+        url: 'https://example.com/fallback-article',
+        contentType: 'article',
+        title: 'Fallback Article',
+        description: 'Content that forces default category fallback',
+        content: 'Minimal content to bypass scraping fallback logic.',
+        domain: 'example.com',
+        wordCount: 60,
+        language: 'zh'
+      }
+
+      mockReadabilityScraper.scrape.mockResolvedValue(mockScrapedContent)
+      mockWebScraper.scrape.mockResolvedValue(mockScrapedContent)
+
+      const response = await streamApp.request('/stream', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${testToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
+        },
+        body: JSON.stringify({
+          url: 'https://example.com/fallback-article',
+          skipConfirm: false
+        })
+      })
+
+      const rawStream = await response.text()
+      const eventLines = rawStream
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line.startsWith('data: '))
+
+      expect(eventLines.length).toBeGreaterThan(0)
+
+      const lastEvent = eventLines[eventLines.length - 1]
+      const payload = JSON.parse(lastEvent.slice(6))
+
+      expect(payload.stage).toBe('completed')
+      expect(payload.data?.category).toBe('杂项')
+
+      const savedLink = await testDrizzle
+        .select()
+        .from(links)
+        .where(eq(links.id, payload.data?.id))
+        .limit(1)
+
+      expect(savedLink[0].aiCategory).toBe('杂项')
+      expect(savedLink[0].status).toBe('pending')
+    })
   })
 })
