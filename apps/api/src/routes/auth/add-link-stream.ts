@@ -59,6 +59,9 @@ function createAddLinkStreamRouter(database = db) {
     const domain = extractDomain(url)
 
     return streamSSE(c, async (stream) => {
+      const systemSettings = await getSettings(database)
+      const defaultCategory = systemSettings.default_category || '其他'
+
       try {
         // Send initial status
         await stream.writeSSE({
@@ -191,7 +194,7 @@ function createAddLinkStreamRouter(database = db) {
             // Use fallback analysis for failed scraping
             aiAnalysis = {
               summary: '无法自动分析内容，请手动输入描述和分类',
-              category: '其他',
+              category: defaultCategory,
               tags: ['待分类'],
               language: 'zh-CN',
               sentiment: 'neutral',
@@ -214,13 +217,13 @@ function createAddLinkStreamRouter(database = db) {
               } as StreamStatusMessage)
             })
 
-            const settings = await getSettings(database)
+            const settings = systemSettings
             
             if (!settings.openai_api_key) {
               // Use fallback analysis
               aiAnalysis = {
                 summary: scrapedContent.description || scrapedContent.title.substring(0, 200),
-                category: 'other',
+                category: defaultCategory,
                 tags: ['article'],
                 language: scrapedContent.language,
                 sentiment: 'neutral',
@@ -271,7 +274,7 @@ function createAddLinkStreamRouter(database = db) {
           // Fallback to basic analysis
           aiAnalysis = {
             summary: scrapedContent.description || scrapedContent.title.substring(0, 200) || '请手动输入描述',
-            category: 'other',
+            category: defaultCategory,
             tags: ['article'],
             language: scrapedContent.language,
             sentiment: 'neutral',
