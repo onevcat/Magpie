@@ -21,8 +21,8 @@
     "@tanstack/react-query": "^5.87.1",
     "clsx": "^2.1.0",
     "daisyui": "^4.12.24",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2",
     "react-router-dom": "^6.22.1"
   },
   "devDependencies": {
