@@ -22,7 +22,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.10",
+    "@hono/node-server": "^1.19.13",
     "@hono/zod-validator": "^0.7.2",
     "@mozilla/readability": "^0.6.0",
     "bcrypt": "^5.1.1",
