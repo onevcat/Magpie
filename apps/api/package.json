@@ -29,7 +29,7 @@
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.12.4",
     "http-proxy": "^1.18.1",
     "jsdom": "^24.0.0",
