@@ -22,15 +22,15 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.10",
+    "@hono/node-server": "^1.19.13",
     "@hono/zod-validator": "^0.7.2",
     "@mozilla/readability": "^0.6.0",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
-    "hono": "^4.12.4",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.14",
     "http-proxy": "^1.18.1",
     "jsdom": "^24.0.0",
     "jsonwebtoken": "^9.0.2",
