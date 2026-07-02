@@ -124,8 +124,8 @@ export class AIAnalyzer {
         response_format: { type: 'json_object' } // Force JSON response if supported
       })
 
-      const aiResponse = response.choices[0]?.message?.content?.trim()
-      
+      const aiResponse = response.choices?.[0]?.message?.content?.trim()
+
       if (!aiResponse) {
         aiLogger.warn('AI service returned empty response', {
           url: content.url,
@@ -470,11 +470,15 @@ export class AIAnalyzer {
       const response = await this.client.chat.completions.create({
         model: this.options.model,
         messages: [{ role: 'user', content: 'Reply with "OK"' }],
-        max_tokens: 10,
+        max_tokens: 128,
         temperature: 0
       })
-      
-      return response.choices[0]?.message?.content?.trim()?.toLowerCase() === 'ok'
+
+      const choice = response.choices?.[0]
+      if (!choice) return false
+      const content = choice.message?.content?.trim()?.toLowerCase() ?? ''
+      const reasoning = (choice.message as unknown as Record<string, unknown>)?.reasoning_content
+      return content.includes('ok') || (typeof reasoning === 'string' && reasoning.length > 0)
     } catch (error) {
       aiLogger.error('AI connection test failed', {
         baseUrl: this.baseUrl,
