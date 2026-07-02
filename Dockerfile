@@ -18,11 +18,23 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 WORKDIR /app
 
-# 复制源代码和配置文件
+# 复制源代码和配置文件（避免覆盖 pnpm 创建的 node_modules symlinks）
 COPY tsconfig.json ./
-COPY packages/shared ./packages/shared
-COPY apps/api ./apps/api
-COPY apps/web ./apps/web
+
+COPY packages/shared/src ./packages/shared/src
+COPY packages/shared/tsconfig.json ./packages/shared/
+
+COPY apps/api/src ./apps/api/src
+COPY apps/api/tsconfig.json ./apps/api/
+COPY apps/api/drizzle ./apps/api/drizzle
+
+COPY apps/web/src ./apps/web/src
+COPY apps/web/tsconfig.json ./apps/web/
+COPY apps/web/index.html ./apps/web/
+COPY apps/web/vite.config.ts ./apps/web/
+COPY apps/web/tailwind.config.js ./apps/web/
+COPY apps/web/postcss.config.js ./apps/web/
+COPY apps/web/public ./apps/web/public
 
 # 构建所有包
 RUN cd packages/shared && pnpm build && \
