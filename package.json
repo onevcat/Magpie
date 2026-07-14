@@ -38,7 +38,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "pnpm": {
     "overrides": {
